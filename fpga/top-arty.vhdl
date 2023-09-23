@@ -40,9 +40,9 @@ entity toplevel is
         uart_main_rx : in  std_ulogic;
 
         -- LEDs
-        led0_b  : out std_ulogic;
-        led0_g  : out std_ulogic;
-        led0_r  : out std_ulogic;
+        led_b   : out std_ulogic_vector(3 downto 0);
+        led_g   : out std_ulogic_vector(3 downto 0);
+        led_r   : out std_ulogic_vector(3 downto 0);
         led4    : out std_ulogic;
         led5    : out std_ulogic;
         led6    : out std_ulogic;
@@ -56,8 +56,49 @@ entity toplevel is
         spi_flash_wp_n   : inout std_ulogic;
         spi_flash_hold_n : inout std_ulogic;
 
+        -- Switches and buttons
+        btn0        : in std_ulogic;
+        btn1        : in std_ulogic;
+        btn2        : in std_ulogic;
+        btn3        : in std_ulogic;
+        sw0         : in std_ulogic;
+        sw1         : in std_ulogic;
+        sw2         : in std_ulogic;
+        sw3         : in std_ulogic;
+
         -- GPIO
-        shield_io        : inout std_ulogic_vector(44 downto 0);
+        shield_io0       : inout std_ulogic;
+        shield_io1       : inout std_ulogic;
+        shield_io2       : inout std_ulogic;
+        shield_io3       : inout std_ulogic;
+        shield_io4       : inout std_ulogic;
+        shield_io5       : inout std_ulogic;
+        shield_io6       : inout std_ulogic;
+        shield_io7       : inout std_ulogic;
+        shield_io8       : inout std_ulogic;
+        shield_io9       : inout std_ulogic;
+        shield_io10      : inout std_ulogic;
+        shield_io11      : inout std_ulogic;
+        shield_io12      : inout std_ulogic;
+        shield_io13      : inout std_ulogic;
+        shield_io26      : inout std_ulogic;
+        shield_io27      : inout std_ulogic;
+        shield_io28      : inout std_ulogic;
+        shield_io29      : inout std_ulogic;
+        shield_io30      : inout std_ulogic;
+        shield_io31      : inout std_ulogic;
+        shield_io32      : inout std_ulogic;
+        shield_io33      : inout std_ulogic;
+        shield_io34      : inout std_ulogic;
+        shield_io35      : inout std_ulogic;
+        shield_io36      : inout std_ulogic;
+        shield_io37      : inout std_ulogic;
+        shield_io38      : inout std_ulogic;
+        shield_io39      : inout std_ulogic;
+        shield_io40      : inout std_ulogic;
+        shield_io41      : inout std_ulogic;
+        shield_io43      : inout std_ulogic;
+        shield_io44      : inout std_ulogic;
 
         -- Ethernet
         eth_ref_clk      : out std_ulogic;
@@ -142,9 +183,9 @@ architecture behaviour of toplevel is
     signal wb_sddma_stb_sent   : std_ulogic;
 
     -- Status LED
-    signal led0_b_pwm : std_ulogic;
-    signal led0_r_pwm : std_ulogic;
-    signal led0_g_pwm : std_ulogic;
+    signal led_b_pwm : std_ulogic_vector(3 downto 0);
+    signal led_r_pwm : std_ulogic_vector(3 downto 0);
+    signal led_g_pwm : std_ulogic_vector(3 downto 0);
 
     -- Dumb PWM for the LEDs, those RGB LEDs are too bright otherwise
     signal pwm_counter  : std_ulogic_vector(8 downto 0);
@@ -331,9 +372,9 @@ begin
                 pll_locked_out => system_clk_locked
                 );
 
-        led0_b_pwm <= '1';
-        led0_r_pwm <= '1';
-        led0_g_pwm <= '0';
+        led_b_pwm <= "1111";
+        led_r_pwm <= "1111";
+        led_g_pwm <= "0000";
 
         -- Vivado barfs on those differential signals if left
         -- unconnected. So instanciate a diff. buffer and feed
@@ -430,9 +471,9 @@ begin
                 ddram_reset_n   => ddram_reset_n
                 );
 
-        led0_b_pwm <= not dram_init_done;
-        led0_r_pwm <= dram_init_error;
-        led0_g_pwm <= dram_init_done and not dram_init_error;
+        led_b_pwm(0) <= not dram_init_done;
+        led_r_pwm(0) <= dram_init_error;
+        led_g_pwm(0) <= dram_init_done and not dram_init_error;
 
     end generate;
 
@@ -683,13 +724,13 @@ begin
         if rising_edge(system_clk) then
             pwm_counter <= std_ulogic_vector(signed(pwm_counter) + 1);
             if pwm_counter(8 downto 4) = "00000" then
-                led0_b <= led0_b_pwm;
-                led0_r <= led0_r_pwm;
-                led0_g <= led0_g_pwm;
+                led_b <= led_b_pwm;
+                led_r <= led_r_pwm;
+                led_g <= led_g_pwm;
             else
-                led0_b <= '0';
-                led0_r <= '0';
-                led0_g <= '0';
+                led_b <= "0000";
+                led_r <= "0000";
+                led_g <= "0000";
             end if;
         end if;
     end process;
@@ -699,70 +740,91 @@ begin
     led6 <= not soc_rst;
 
     -- GPIO
-    gpio_in(0) <= shield_io(0);
-    gpio_in(1) <= shield_io(1);
-    gpio_in(2) <= shield_io(2);
-    gpio_in(3) <= shield_io(3);
-    gpio_in(4) <= shield_io(4);
-    gpio_in(5) <= shield_io(5);
-    gpio_in(6) <= shield_io(6);
-    gpio_in(7) <= shield_io(7);
-    gpio_in(8) <= shield_io(8);
-    gpio_in(9) <= shield_io(9);
-    gpio_in(10) <= shield_io(10);
-    gpio_in(11) <= shield_io(11);
-    gpio_in(12) <= shield_io(12);
-    gpio_in(13) <= shield_io(13);
-    gpio_in(14) <= shield_io(26);
-    gpio_in(15) <= shield_io(27);
-    gpio_in(16) <= shield_io(28);
-    gpio_in(17) <= shield_io(29);
-    gpio_in(18) <= shield_io(30);
-    gpio_in(19) <= shield_io(31);
-    gpio_in(20) <= shield_io(32);
-    gpio_in(21) <= shield_io(33);
-    gpio_in(22) <= shield_io(34);
-    gpio_in(23) <= shield_io(35);
-    gpio_in(24) <= shield_io(36);
-    gpio_in(25) <= shield_io(37);
-    gpio_in(26) <= shield_io(38);
-    gpio_in(27) <= shield_io(39);
-    gpio_in(28) <= shield_io(40);
-    gpio_in(29) <= shield_io(41);
-    gpio_in(30) <= shield_io(43);
-    gpio_in(31) <= shield_io(44);
+    gpio_in(10) <= btn0;
+    gpio_in(11) <= btn1;
+    gpio_in(12) <= btn2;
+    gpio_in(13) <= btn3;
+    gpio_in(14) <= sw0;
+    gpio_in(15) <= sw1;
+    gpio_in(16) <= sw2;
+    gpio_in(17) <= sw3;
 
-    shield_io(0) <= gpio_out(0) when gpio_dir(0) = '1' else 'Z';
-    shield_io(1) <= gpio_out(1) when gpio_dir(1) = '1' else 'Z';
-    shield_io(2) <= gpio_out(2) when gpio_dir(2) = '1' else 'Z';
-    shield_io(3) <= gpio_out(3) when gpio_dir(3) = '1' else 'Z';
-    shield_io(4) <= gpio_out(4) when gpio_dir(4) = '1' else 'Z';
-    shield_io(5) <= gpio_out(5) when gpio_dir(5) = '1' else 'Z';
-    shield_io(6) <= gpio_out(6) when gpio_dir(6) = '1' else 'Z';
-    shield_io(7) <= gpio_out(7) when gpio_dir(7) = '1' else 'Z';
-    shield_io(8) <= gpio_out(8) when gpio_dir(8) = '1' else 'Z';
-    shield_io(9) <= gpio_out(9) when gpio_dir(9) = '1' else 'Z';
-    shield_io(10) <= gpio_out(10) when gpio_dir(10) = '1' else 'Z';
-    shield_io(11) <= gpio_out(11) when gpio_dir(11) = '1' else 'Z';
-    shield_io(12) <= gpio_out(12) when gpio_dir(12) = '1' else 'Z';
-    shield_io(13) <= gpio_out(13) when gpio_dir(13) = '1' else 'Z';
-    shield_io(26) <= gpio_out(14) when gpio_dir(14) = '1' else 'Z';
-    shield_io(27) <= gpio_out(15) when gpio_dir(15) = '1' else 'Z';
-    shield_io(28) <= gpio_out(16) when gpio_dir(16) = '1' else 'Z';
-    shield_io(29) <= gpio_out(17) when gpio_dir(17) = '1' else 'Z';
-    shield_io(30) <= gpio_out(18) when gpio_dir(18) = '1' else 'Z';
-    shield_io(31) <= gpio_out(19) when gpio_dir(19) = '1' else 'Z';
-    shield_io(32) <= gpio_out(20) when gpio_dir(20) = '1' else 'Z';
-    shield_io(33) <= gpio_out(21) when gpio_dir(21) = '1' else 'Z';
-    shield_io(34) <= gpio_out(22) when gpio_dir(22) = '1' else 'Z';
-    shield_io(35) <= gpio_out(23) when gpio_dir(23) = '1' else 'Z';
-    shield_io(36) <= gpio_out(24) when gpio_dir(24) = '1' else 'Z';
-    shield_io(37) <= gpio_out(25) when gpio_dir(25) = '1' else 'Z';
-    shield_io(38) <= gpio_out(26) when gpio_dir(26) = '1' else 'Z';
-    shield_io(39) <= gpio_out(27) when gpio_dir(27) = '1' else 'Z';
-    shield_io(40) <= gpio_out(28) when gpio_dir(28) = '1' else 'Z';
-    shield_io(41) <= gpio_out(29) when gpio_dir(29) = '1' else 'Z';
-    shield_io(43) <= gpio_out(30) when gpio_dir(30) = '1' else 'Z';
-    shield_io(44) <= gpio_out(31) when gpio_dir(31) = '1' else 'Z';
+    gpio_in(0) <= shield_io10;
+    gpio_in(1) <= shield_io11;
+    gpio_in(2) <= shield_io12;
+    gpio_in(3) <= shield_io13;
+    gpio_in(4) <= shield_io26;
+    gpio_in(5) <= shield_io27;
+    gpio_in(6) <= shield_io28;
+    gpio_in(7) <= shield_io29;
+    gpio_in(8) <= shield_io8;
+    gpio_in(9) <= shield_io9;
+    --gpio_in(10) <= shield_io10;
+    --gpio_in(11) <= shield_io11;
+    --gpio_in(12) <= shield_io12;
+    --gpio_in(13) <= shield_io13;
+    --gpio_in(14) <= shield_io26;
+    --gpio_in(15) <= shield_io27;
+    --gpio_in(16) <= shield_io28;
+    --gpio_in(17) <= shield_io29;
+    gpio_in(18) <= shield_io30;
+    gpio_in(19) <= shield_io31;
+    gpio_in(20) <= shield_io32;
+    gpio_in(21) <= shield_io33;
+    gpio_in(22) <= shield_io34;
+    gpio_in(23) <= shield_io35;
+    gpio_in(24) <= shield_io36;
+    gpio_in(25) <= shield_io37;
+    gpio_in(26) <= shield_io38;
+    gpio_in(27) <= shield_io39;
+    gpio_in(28) <= shield_io40;
+    gpio_in(29) <= shield_io41;
+    gpio_in(30) <= shield_io43;
+    gpio_in(31) <= shield_io44;
+
+    led_b_pwm(1) <= gpio_out(0) when gpio_dir(0) = '1' else 'Z';
+    led_g_pwm(1) <= gpio_out(1) when gpio_dir(1) = '1' else 'Z';
+    led_r_pwm(1) <= gpio_out(2) when gpio_dir(2) = '1' else 'Z';
+
+    led_b_pwm(2) <= gpio_out(3) when gpio_dir(3) = '1' else 'Z';
+    led_g_pwm(2) <= gpio_out(4) when gpio_dir(4) = '1' else 'Z';
+    led_r_pwm(2) <= gpio_out(5) when gpio_dir(5) = '1' else 'Z';
+
+    led_b_pwm(3) <= gpio_out(6) when gpio_dir(6) = '1' else 'Z';
+    led_g_pwm(3) <= gpio_out(7) when gpio_dir(7) = '1' else 'Z';
+    led_r_pwm(3) <= gpio_out(8) when gpio_dir(8) = '1' else 'Z';
+
+    --shield_io0 <= gpio_out(0) when gpio_dir(0) = '1' else 'Z';
+    --shield_io1 <= gpio_out(1) when gpio_dir(1) = '1' else 'Z';
+    --shield_io2 <= gpio_out(2) when gpio_dir(2) = '1' else 'Z';
+    --shield_io3 <= gpio_out(3) when gpio_dir(3) = '1' else 'Z';
+    --shield_io4 <= gpio_out(4) when gpio_dir(4) = '1' else 'Z';
+    --shield_io5 <= gpio_out(5) when gpio_dir(5) = '1' else 'Z';
+    --shield_io6 <= gpio_out(6) when gpio_dir(6) = '1' else 'Z';
+    --shield_io7 <= gpio_out(7) when gpio_dir(7) = '1' else 'Z';
+    --shield_io8 <= gpio_out(8) when gpio_dir(8) = '1' else 'Z';
+    shield_io9 <= gpio_out(9) when gpio_dir(9) = '1' else 'Z';
+    shield_io10 <= gpio_out(10) when gpio_dir(10) = '1' else 'Z';
+    shield_io11 <= gpio_out(11) when gpio_dir(11) = '1' else 'Z';
+    shield_io12 <= gpio_out(12) when gpio_dir(12) = '1' else 'Z';
+    shield_io13 <= gpio_out(13) when gpio_dir(13) = '1' else 'Z';
+    shield_io26 <= gpio_out(14) when gpio_dir(14) = '1' else 'Z';
+    shield_io27 <= gpio_out(15) when gpio_dir(15) = '1' else 'Z';
+    shield_io28 <= gpio_out(16) when gpio_dir(16) = '1' else 'Z';
+    shield_io29 <= gpio_out(17) when gpio_dir(17) = '1' else 'Z';
+    shield_io30 <= gpio_out(18) when gpio_dir(18) = '1' else 'Z';
+    shield_io31 <= gpio_out(19) when gpio_dir(19) = '1' else 'Z';
+    shield_io32 <= gpio_out(20) when gpio_dir(20) = '1' else 'Z';
+    shield_io33 <= gpio_out(21) when gpio_dir(21) = '1' else 'Z';
+    shield_io34 <= gpio_out(22) when gpio_dir(22) = '1' else 'Z';
+    shield_io35 <= gpio_out(23) when gpio_dir(23) = '1' else 'Z';
+    shield_io36 <= gpio_out(24) when gpio_dir(24) = '1' else 'Z';
+    shield_io37 <= gpio_out(25) when gpio_dir(25) = '1' else 'Z';
+    shield_io38 <= gpio_out(26) when gpio_dir(26) = '1' else 'Z';
+    shield_io39 <= gpio_out(27) when gpio_dir(27) = '1' else 'Z';
+    shield_io40 <= gpio_out(28) when gpio_dir(28) = '1' else 'Z';
+    shield_io41 <= gpio_out(29) when gpio_dir(29) = '1' else 'Z';
+    shield_io43 <= gpio_out(30) when gpio_dir(30) = '1' else 'Z';
+    shield_io44 <= gpio_out(31) when gpio_dir(31) = '1' else 'Z';
 
 end architecture behaviour;
